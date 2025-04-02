@@ -42,6 +42,7 @@
             "parameters": {
                 "temperature": 0.7,
                 "max_new_tokens": 150,
+                "stop": ["Soru:", "\n\n", "Konu:"]
             }
         }
 
