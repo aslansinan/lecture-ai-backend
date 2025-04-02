@@ -24,11 +24,11 @@ class TopicRequest(BaseModel):
 def generate_question(data: TopicRequest):
     prompt = f"""
     Sen bir ilkokul öğretmenisin ve sınav hazırlıyorsun.
-    Aşağıda verilen konuda, **yalnızca Türkçe** olacak şekilde 1 adet açık uçlu sınav sorusu yaz.
+    Aşağıda verilen konuda, **yalnızca Türkçe** dilinde olacak şekilde 1 adet açık uçlu sınav sorusu yaz, bu soru orta derecede bilgiye sahip olacak öğrenciler için olmalı.
 
     Konu: {data.topic}
 
-    Soruyu "Soru:" ile başlat. Gereksiz tekrar yapma.
+    Soruyu "Soru:" ile başlat. Gereksiz tekrar yapma, yani cümleyi tekrar tekrar yazma.
     """
     print("TOKEN:", os.getenv("HF_API_KEY"))
     headers = {
@@ -39,7 +39,7 @@ def generate_question(data: TopicRequest):
         "inputs": prompt,
         "parameters": {
             "temperature": 0.7,
-            "max_new_tokens": 200,
+            "max_new_tokens": 150,
         }
     }
 
