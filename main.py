@@ -23,16 +23,18 @@ class TopicRequest(BaseModel):
 @app.post("/generate-question")
 def generate_question(data: TopicRequest):
     prompt = f"""
-Sen bir ilkokul öğretmenisin ve sınav soruları hazırlıyorsun.
-Aşağıda belirtilen konuda, yalnızca **Türkçe** dilinde olacak şekilde **1 adet açık uçlu sınav sorusu** yaz.
+    Sen bir ilkokul öğretmenisin ve sınav sorusu hazırlıyorsun.
+    Aşağıdaki konuda açık uçlu, yalnızca **Türkçe**, net ve sade bir **soru** yaz.
 
-Sadece sınav sorusunu üret. Açıklama, tekrar veya başka bir metin ekleme.
-Soruyu doğrudan "Soru:" ile başlat ve yalnızca 1 kez üret.
+    - Sadece sınav sorusunu üret.
+    - Giriş cümlesi, açıklama ya da örnek verme.
+    - Yanıt "Soru:" ile başlasın ve sadece 1 kez geçsin.
+    - Sadece anlamlı 1 cümle olsun.
 
-Konu: {data.topic}
+    Konu: {data.topic}
 
-Cevap:
-"""
+    Soru:
+    """
     headers = {
         "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
     }
