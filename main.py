@@ -24,12 +24,13 @@ class TopicRequest(BaseModel):
 def generate_question(data: TopicRequest):
     prompt = f"""
     Sen bir ilkokul öğretmenisin ve sınav sorusu hazırlıyorsun.
-    Aşağıdaki konuda açık uçlu, yalnızca **Türkçe**, net ve sade bir **soru** yaz.
+    Aşağıdaki konuda açık uçlu, net ve sade bir soru yaz.
 
     - Sadece sınav sorusunu üret.
     - Giriş cümlesi, açıklama ya da örnek verme.
     - Yanıt "Soru:" ile başlasın ve sadece 1 kez geçsin.
     - Sadece anlamlı 1 cümle olsun.
+    - Cümle tekrarları olmasın.
 
     Konu: {data.topic}
 
