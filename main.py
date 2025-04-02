@@ -11,7 +11,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # React için açık tut
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -23,57 +23,62 @@ class TopicRequest(BaseModel):
 @app.post("/generate-question")
 def generate_question(data: TopicRequest):
     prompt = f"""
-    Sen bir ilkokul öğretmenisin ve sınav hazırlıyorsun.
-    Aşağıda verilen konuda, yalnızca **Türkçe** dilinde, açık uçlu ve anlamlı bir **sınav sorusu** üret.
+Sen bir ilkokul öğretmenisin ve sınav soruları hazırlıyorsun.
+Aşağıda belirtilen konuda, yalnızca **Türkçe** dilinde olacak şekilde **1 adet açık uçlu sınav sorusu** yaz.
 
-    Sadece soruyu döndür. Ekstra açıklama, tekrar veya selamlama verme.
+Sadece sınav sorusunu üret. Açıklama, tekrar veya başka bir metin ekleme.
+Soruyu doğrudan "Soru:" ile başlat ve yalnızca 1 kez üret.
 
-    Konu: {data.topic}
+Konu: {data.topic}
 
-    Soruyu "Soru:" ile başlat ve sadece 1 kez yaz.
-    """
-    print("TOKEN:", os.getenv("HF_API_KEY"))
+Cevap:
+"""
     headers = {
         "Authorization": f"Bearer {os.getenv('HF_API_KEY')}"
     }
 
-    json = {
+    json_data = {
         "inputs": prompt,
         "parameters": {
             "temperature": 0.7,
-            "max_new_tokens": 150,
+            "max_new_tokens": 200
         }
     }
 
     response = requests.post(
         "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.1",
         headers=headers,
-        json=json,
+        json=json_data
     )
 
     if response.status_code != 200:
         return {"response": f"API hatası: {response.status_code}"}
 
     result = response.json()
-    answer = result[0]["generated_text"]
+    generated = result[0]["generated_text"]
 
-    # Prompt tekrarını çıkar
-    if prompt.strip() in answer:
-        answer = answer.replace(prompt.strip(), '')
+    # Prompt'u ayır
+    answer = generated.replace(prompt, "").strip()
 
-    # Gereksiz tekrar eden "Soru:" ifadelerini temizle
-    answer = answer.strip()
+    # "Soru:" başlığına ait fazlalıkları sadeleştir
     if answer.lower().startswith("soru: soru:"):
         answer = "Soru:" + answer[11:].strip()
     elif answer.lower().startswith("soru: soru"):
         answer = "Soru:" + answer[9:].strip()
 
-    # Eğer iki kez aynı cümleyi yazdıysa bunu sadeleştirme için:
+    # Çoklu tekrarları temizle
     lines = answer.split('\n')
+    seen = set()
     unique_lines = []
     for line in lines:
-        if line.strip() not in unique_lines:
-            unique_lines.append(line.strip())
-    answer = '\n'.join(unique_lines).strip()
+        line = line.strip()
+        if line and line not in seen:
+            seen.add(line)
+            unique_lines.append(line)
+    answer = "\n".join(unique_lines).strip()
+
+    # Eğer cevap sadece "Soru:" kalırsa, fallback mesaj döndür
+    if answer.strip().lower() == "soru:" or len(answer.strip()) < 10:
+        return {"response": "Soru: Belirtilen konuda anlamlı bir sınav sorusu oluşturulamadı. Lütfen konuyu tekrar ifade edin."}
 
     return {"response": answer}
